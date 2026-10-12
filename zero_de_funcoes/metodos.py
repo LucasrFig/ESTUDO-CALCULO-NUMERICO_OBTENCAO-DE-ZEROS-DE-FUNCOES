@@ -1,53 +1,136 @@
-def f(x):
-    return (x**2) - 4
 
-# Método Bissecção:
-def metodo_bisseccao(a,b,tolerancia):
-    print("MÉTODO DA BISSECÇÃO")
+import time
 
-    print(f" intervalo inicial [{a},{b}]\n")
+# METODO DA BISSECCAO
 
-    #condições de aplicação:
-    if f(a) * f(b) >= 0:
-        print("Intervalo inválido")
-        return
+def metodo_bisseccao(f, limiteA, limiteB, tolerancia, limite_iteracoes):
 
-    count = 0
+    inicio = time.perf_counter()
 
-    while True:
-        count += 1
-        #definir ponto médio
-        x1 = (a + b)/2 
-        print(f"{count} | intervalo ataual [{a},{b}] | Ponto médio = {x1}.")
+    # Validacao dos parametros
+    if tolerancia <= 0:
+        raise ValueError("A tolerancia deve ser positiva.")
 
-        # verificar condições de parada
-        if abs(f(x1)) <= tolerancia:
-            print(f"Um zero da função é {x1}!")
-            return
+    if limite_iteracoes < 1:
+        raise ValueError("O limite de iteracoes deve ser positivo.")
 
-        if count >= 30:
-            print(f"Um zero da função é {x1}!")
-            return
-        
-        # definir próximo intervalo
-        if f(a) * f(x1) < 0:
-            b = x1
-        else:
-            a = x1
-        
+    if limiteA >= limiteB:
+        raise ValueError("O limiteA deve ser menor que limiteB.")
+
+    fa = f(limiteA)
+    fb = f(limiteB)
+
+    raiz = None
+    iteracoes = 0
+    convergiu = False
+    status = "Limite de iteracoes atingido"
+
+    # Verifica se uma extremidade ja e uma raiz
+    if fa == 0:
+        raiz = limiteA
+        convergiu = True
+        status = "Raiz exata no limiteA"
+
+    elif fb == 0:
+        raiz = limiteB
+        convergiu = True
+        status = "Raiz exata no limiteB"
+
+    # Verifica se existe mudanca de sinal
+    elif fa * fb > 0:
+        raise ValueError(
+            "O intervalo nao apresenta mudanca de sinal."
+        )
+
+    else:
+        # Loop principal da bisseccao
+        for i in range(1, limite_iteracoes + 1):
+            iteracoes = i
+
+            # Calcula o ponto medio
+            raiz = limiteA + (limiteB - limiteA) / 2
+
+            fr = f(raiz)
+
+            # Verifica a convergencia pelo residuo
+            if abs(fr) <= tolerancia:
+                convergiu = True
+                status = "Convergencia pelo residuo"
+                break
+
+            # Atualiza o intervalo
+            if fa * fr < 0:
+                limiteB = raiz
+                fb = fr
+            else:
+                limiteA = raiz
+                fa = fr
+
+    # Calcula o residuo final
+    residuo = abs(f(raiz)) if raiz is not None else None
+
+    fim = time.perf_counter()
+
+    return {
+        "metodo": "Bisseccao",
+        "raiz": raiz,
+        "iteracoes": iteracoes,
+        "residuo": residuo,
+        "convergiu": convergiu,
+        "tempo_ms": (fim - inicio) * 1000,
+        "status": status
+    }
 
 
+# EXECUCAO DOS METODOS
+
+def executar_metodos(
+    f,
+    limiteA,
+    limiteB,
+    tolerancia=1e-6,
+    limite_iteracoes=1000
+):
+
+    resultados = []
+
+    # Por enquanto, executa apenas a bisseccao
+    resultado = metodo_bisseccao(
+        f,
+        limiteA,
+        limiteB,
+        tolerancia,
+        limite_iteracoes
+    )
+
+    resultados.append(resultado)
+
+    # Imprime os resultados
+    print("\n========== RESULTADOS ==========")
+
+    for resultado in resultados:
+        print(f"\nMetodo: {resultado['metodo']}")
+        print(f"Raiz encontrada: {resultado['raiz']}")
+        print(f"Iteracoes: {resultado['iteracoes']}")
+        print(f"Residuo final: {resultado['residuo']}")
+        print(f"Convergiu: {resultado['convergiu']}")
+        print(f"Tempo (ms): {resultado['tempo_ms']:.6f}")
+        print(f"Status: {resultado['status']}")
+
+    return resultados
 
 
-# Método da Falsa Posição:
+# TESTE DO PROGRAMA
 
+if __name__ == "__main__":
+    import math
 
-# Método do Newton-Raphson:
+    f = lambda x: math.pow(x,2) - 4
 
-
-# Método da Secante:
-
-
-# Testar Programa:
-metodo_bisseccao(1,15,tolerancia=0)
-
+    dados = executar_metodos(
+        f=f,
+        limiteA=0,
+        limiteB=8,
+        tolerancia=1e-6,
+        limite_iteracoes=1000
+    )
