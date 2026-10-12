@@ -5,29 +5,39 @@ def f(x):
 def metodo_bisseccao(a,b,tolerancia):
     print("MÉTODO DA BISSECÇÃO")
 
-    print(f" intervalo [{a},{b}] |")
+    print(f" intervalo inicial [{a},{b}]\n")
 
     #condições de aplicação:
     if f(a) * f(b) >= 0:
         print("Intervalo inválido")
         return
 
-    while 1:
+    count = 0
+
+    while True:
+        count += 1
         #definir ponto médio
         x1 = (a + b)/2 
-        print(f"Ponto médio = {x1}.\n")
+        print(f"{count} | intervalo ataual [{a},{b}] | Ponto médio = {x1}.")
+
         # verificar condições de parada
         if abs(f(x1)) <= tolerancia:
-            print(f"Um zero da função é {x1}!\n")
+            print(f"Um zero da função é {x1}!")
             return
 
+        if count >= 30:
+            print(f"Um zero da função é {x1}!")
+            return
+        
         # definir próximo intervalo
-        if f(a) - f(x1) < 0:
+        if f(a) * f(x1) < 0:
             b = x1
         else:
             a = x1
+        
 
-        print(f" intervalo [{a},{b}] |")
+
+
 
 # Método da Falsa Posição:
 
@@ -39,5 +49,5 @@ def metodo_bisseccao(a,b,tolerancia):
 
 
 # Testar Programa:
-metodo_bisseccao(1,5,tolerancia=0)
+metodo_bisseccao(1,15,tolerancia=0)
 
