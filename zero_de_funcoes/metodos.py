@@ -56,7 +56,7 @@ def metodo_bisseccao(f, limiteA, limiteB, tolerancia, limite_iteracoes):
             iteracoes = i
 
             # Calcula o ponto medio
-            raiz = limiteA + (limiteB - limiteA) / 2
+            raiz = (limiteA + limiteB) / 2
 
             fr = f(raiz)
 
