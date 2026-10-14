@@ -5,7 +5,7 @@ import sympy as sp
 def criar_expressao(texto):
     x = sp.Symbol('x')
     expressao = sp.sympify(texto)
-    return expressao    
+    return expressao   
 
 def pegar_derivada(expressao):
     x = sp.Symbol('x')
@@ -48,9 +48,7 @@ def metodo_bisseccao(f, limiteA, limiteB, tolerancia, limite_iteracoes):
 
     # Verifica se existe mudanca de sinal
     elif fa * fb > 0:
-        raise ValueError(
-            "O intervalo nao apresenta mudanca de sinal."
-        )
+        raise ValueError("O intervalo nao apresenta mudanca de sinal.")
 
     else:
         # Loop principal da bisseccao
@@ -235,6 +233,90 @@ def metodo_newton_raphson(f, df, x0, tolerancia, limite_iteracoes):
         "status": status
     }
 
+# METODO DA SECANTE
+def metodo_secante(f, x0, x1, tolerancia, limite_iteracoes):
+
+    inicio = time.perf_counter()
+
+    # Validacao dos parametros
+    if tolerancia <= 0:
+        raise ValueError("A tolerancia deve ser positiva.")
+
+    if limite_iteracoes < 1:
+        raise ValueError("O limite de iteracoes deve ser positivo.")
+
+    iteracoes = 0
+    raiz = None
+    convergiu = False
+    status = "Limite de iteracoes atingido"
+
+    f0 = f(x0)
+    f1 = f(x1)
+
+    # Verifica se alguma estimativa inicial ja e raiz
+    if abs(f0) <= tolerancia:
+        raiz = x0
+        convergiu = True
+        status = "Convergencia pelo residuo"
+
+    elif abs(f1) <= tolerancia:
+        raiz = x1
+        convergiu = True
+        status = "Convergencia pelo residuo"
+
+    else:
+        for k in range(1, limite_iteracoes + 1):
+            iteracoes = k
+
+            denominador = f1 - f0
+
+            if denominador == 0:
+                raise ZeroDivisionError(
+                    "Denominador nulo no metodo da secante."
+                )
+
+            # Formula apresentada no slide
+            x2 = (x0 * f1 - x1 * f0) / denominador
+
+            f2 = f(x2)
+
+            # Criterio de parada pelo residuo
+            if abs(f2) <= tolerancia:
+                raiz = x2
+                convergiu = True
+                status = "Convergencia pelo residuo"
+                break
+
+            # Criterio de parada pelo erro relativo
+            if x2 != 0 and abs((x2 - x1) / x2) <= tolerancia:
+                raiz = x2
+                convergiu = True
+                status = "Convergencia pelo erro relativo"
+                break
+
+            # Atualiza as aproximacoes para a proxima iteracao
+            x0 = x1
+            f0 = f1
+
+            x1 = x2
+            f1 = f2
+
+            raiz = x2
+
+    # Calcula o residuo final
+    residuo = abs(f(raiz)) if raiz is not None else None
+
+    fim = time.perf_counter()
+
+    return {
+        "metodo": "Secante",
+        "raiz": raiz,
+        "iteracoes": iteracoes,
+        "residuo": residuo,
+        "convergiu": convergiu,
+        "tempo_ms": (fim - inicio) * 1000,
+        "status": status
+    }
 
 
 # EXECUCAO DOS METODOS
@@ -243,7 +325,9 @@ def executar_metodos(
     texto_funcao,
     limiteA,
     limiteB,
-    x0,
+    x0_newton,
+    x0_secante,
+    x1_secante,
     tolerancia=1e-6,
     limite_iteracoes=1000
 ):
@@ -258,6 +342,8 @@ def executar_metodos(
     expressao_derivada = pegar_derivada(expressao)
     df = sp.lambdify(x, expressao_derivada, "math")
 
+
+    #Lista
     resultados = []
 
     # Metodo da Bisseccao
@@ -268,23 +354,30 @@ def executar_metodos(
     resultado = metodo_falsa_pos(f, limiteA, limiteB, tolerancia, limite_iteracoes)
     resultados.append(resultado)
 
-    resultado = metodo_newton_raphson(f, df, x0, tolerancia, limite_iteracoes)
+    # método newton Raphson
+    resultado = metodo_newton_raphson(f, df, x0_newton, tolerancia, limite_iteracoes)
+    resultados.append(resultado)
+    
+    # método secante
+    resultado = metodo_secante(f, x0_secante, x1_secante, tolerancia, limite_iteracoes)
     resultados.append(resultado)
 
     # Imprime os resultados
     print(f"\nFuncao analisada: {expressao}")
+    print(f"\nDerivada da Função: {expressao_derivada}")
     print("\n========== RESULTADOS ==========")
 
     for resultado in resultados:
         print(f"\nMetodo: {resultado['metodo']}")
-        print(f"Raiz encontrada: {resultado['raiz']}")
+        print(f"Raiz encontrada(X): {resultado['raiz']}")
         print(f"Iteracoes: {resultado['iteracoes']}")
-        print(f"Residuo final: {resultado['residuo']}")
+        print(f"Residuo final(f(X)): {resultado['residuo']}")
         print(f"Convergiu: {resultado['convergiu']}")
         print(f"Tempo (ms): {resultado['tempo_ms']:.6f}")
         print(f"Status: {resultado['status']}")
 
     return resultados
+
 
 
 # TESTE DO PROGRAMA
@@ -294,10 +387,13 @@ if __name__ == "__main__":
 
     dados = executar_metodos(
         texto_funcao = texto,
-        limiteA=0,
+        limiteA= 0,
         limiteB=8,
-        x0 = 3,
-        tolerancia=1e-6,
+        x0_newton= 6,
+        x0_secante= 1,
+        x1_secante= 4,
+        tolerancia= 0.002,
         limite_iteracoes=1000
     )
+    
 
